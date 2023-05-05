@@ -1,0 +1,48 @@
+'hola como ta'
+55aldka1.3
+
+cad
+ent
+fun
+ver
+fal
+1.3
+5
+!val1
+:funcion1
++/-*
+cad !val1 = 'sa1';
+bol !bol1 = fal;
+dec !dec1 = 2.2
+ent !ent1 = 1 * 2 + 2 / 1 - 3;
+
+fun cad :oop ( ent !val2 ) {
+	cad !seramenor = ''
+	
+	sic (ent <= 2 y ver ){
+		!seramenor = 'si es menor';
+	}
+	
+	noc {
+		1 <= 2
+	}
+	
+	dev 'si funciona';	
+}
+2>=3
+y
+o
+n
+==
+
+!oop();
+
+!oop + 5;
+
+:op
+
+'si no menor';
+=
+==
+
+:funcion2
