@@ -1,48 +1,24 @@
-'hola como ta'
-55aldka1.3
+imp('ads');
 
-cad
-ent
-fun
-ver
-fal
-1.3
-5
-!val1
-:funcion1
-+/-*
-cad !val1 = 'sa1';
-bol !bol1 = fal;
-dec !dec1 = 2.2
-ent !ent1 = 1 * 2 + 2 / 1 - 3;
+imp(!cad2);
 
-fun cad :oop ( ent !val2 ) {
-	cad !seramenor = ''
-	
-	sic (ent <= 2 y ver ){
-		!seramenor = 'si es menor';
-	}
-	
-	noc {
-		1 <= 2
-	}
-	
-	dev 'si funciona';	
+ent !ent1 = fal;
+
+fun :fun1(){
+	imp('juan');
 }
-2>=3
-y
-o
-n
-==
 
-!oop();
+cic(10){
+	ent !ent1 = !ent2;
+}
 
-!oop + 5;
+sic(10< fal){
+} sin {
+}
 
-:op
+ent !ent1 = 10;
 
-'si no menor';
-=
-==
+sic(10 < 5 y 10 < 5 o 5 < !ent2){
+}
 
-:funcion2
+ent !ent3 = fal + 1;
