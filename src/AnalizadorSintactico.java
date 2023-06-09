@@ -5,105 +5,162 @@ public class AnalizadorSintactico {
 	private int index;
 	private Token currentToken;
 
-	public void analizar(ArrayList<Token> tokens) {
+	public Nodo analizar(ArrayList<Token> tokens) {
 		this.tokens = tokens;
 		this.index = 0;
 		this.currentToken = tokens.get(0);
+		
+		Nodo arbolSintactico = new Nodo(null);
+		
 		try {
-			programa();
+			arbolSintactico = programa();
 			System.out.println("Analisis sintactico exitoso FIN");
+			return arbolSintactico;
 		} catch (Exception e) {
 			System.out.println("Error de sintaxis: " + e.getMessage());
+			return new Nodo("");
 		}
+				
+	}
+	
+	public static void imprimirArbolSintactico(Nodo nodo, int nivel) {
+	    for (int i = 0; i < nivel; i++) {
+	        System.out.print("  ");
+	    }
+	    System.out.println(nodo.getValor());
+	    for (Nodo hijo : nodo.getHijos()) {
+	        imprimirArbolSintactico(hijo, nivel + 1);
+	    }
 	}
 
 	// Regla de inicio: programa -> sentencia*
-	private void programa() {
+	private Nodo programa() {
+		
+		Nodo programa = new Nodo("programa");
+		
 	    while (index < tokens.size()) {
 	        try {
-	            sentencia();
+	            programa.agregarHijo(sentencia());
 	        } catch (RuntimeException e) {
 	            if (e.getMessage().equals("Detener analisis")) {
 	                break; // Sale del bucle de análisis
 	            }
 	        }
 	    }
+	    
+	    return programa;
 	}
 	
-	// Regla: sentencia -> asignacion | estructura | funcion | imprimir | si
-	private void sentencia() {
+	// Regla: sentencia -> asignacion | estructura | funcion | imprimir | si | NOMBRE_VARIABLE | NOMBRE_FUNCION
+	private Nodo sentencia() {
 	    try {
 	        if (currentToken.getTipo().equals("TIPO_VARIABLE")) {
-	            asignacion();
+	            return asignacion();
 	        } else if (currentToken.getTipo().equals("FUNCION")) {
-	            funcion();
+	            return funcion();
 	        } else if (currentToken.getTipo().equals("IMPRIMIR")) {
-	            imprimir();
+	            return imprimir();
 	        } else if (currentToken.getTipo().equals("CICLO")) {
-	            estructura();
+	            return ciclo();
 	        } else if (currentToken.getTipo().equals("SI")) {
-	            si();
+	            return si();
 	        } else if (currentToken.getTipo().equals("NOMBRE_VARIABLE")) {
-	            variable();
+	            return variable();
+	        } else if (currentToken.getTipo().equals("NOMBRE_FUNCION")) {
+	            return llamarFuncion();
 	        } else {
 	            throw new RuntimeException("Error de sintaxis. Sentencia invalida");
 	        }
-	        
 	    } catch (RuntimeException e) {
 	        System.out.println(e.getMessage());
 	        throw new RuntimeException("Detener analisis");
 	    }
 	}
+	// Regla: llamarFuncion -> NOMBRE_FUNCION | PARENTECIS_A | PARENTECIS_C | FIN_SENTENCIA
+	private Nodo llamarFuncion() {
+		Nodo llamarFuncion = new Nodo("llamarFuncion");
+		
+		verificar("NOMBRE_FUNCION");
+        verificar("PARENTECIS_A");
+        verificar("PARENTECIS_C");
+        verificar("FIN_SENTENCIA");
+        
+        return llamarFuncion;
+	}
 	
-	private void variable() {
+	// Regla: variable -> NOMBRE_VARIABLE | ASIGNACION | VALOR | FIN_SENTENCIA
+	private Nodo variable() {
+		Nodo variable = new Nodo("variable");
 		verificar("NOMBRE_VARIABLE");
         if (currentToken.getTipo().equals("ASIGNACION")) {
             verificar("ASIGNACION");
-            valor();
+            variable.agregarHijo(valor());
             verificar("FIN_SENTENCIA");
         } else {
             verificar("FIN_SENTENCIA");
         }
+        return variable;
 	}
 	
 	// Regla: si -> SI '(' condicion ')' bloque [SINO bloque]
-	private void si() {
+	private Nodo si() {
+		
+		Nodo si = new Nodo("comparacion");
 	    verificar("SI");
 	    verificar("PARENTECIS_A");
-	    condicion();
+	    si.agregarHijo(condicion());
 	    verificar("PARENTECIS_C");
-	    bloque();
+	    si.agregarHijo(bloque());
 	    
 	    if (currentToken.getTipo().equals("ENTONCES")) {
 	        verificar("ENTONCES");
-	        bloque();
+	        si.agregarHijo(bloque());
 	    }
+	    return si;
 	}
 
 
-	// Regla: asignacion -> TIPO_VARIABLE NOMBRE_VARIABLE FIN_SENTENCIA |
-	// TIPO_VARIABLE NOMBRE_VARIABLE '=' expresion ';'
-	private void asignacion() {
+	// Regla: asignacion -> TIPO_VARIABLE NOMBRE_VARIABLE FIN_SENTENCIA | TIPO_VARIABLE NOMBRE_VARIABLE '=' expresion ';'
+	private Nodo asignacion() {
+		Nodo asignacion = new Nodo("asignacion");
+		
 	    verificar("TIPO_VARIABLE");
 	    verificar("NOMBRE_VARIABLE");
 	    if (currentToken.getTipo().equals("ASIGNACION")) {
 	        verificar("ASIGNACION");
-	        valor();
+	        
+	        asignacion.agregarHijo(valor());
 	        
 	        if (currentToken.getTipo().equals("OPERADOR_ARITMETICO")) {
-	            verificar("OPERADOR_ARITMETICO");
-	            valor();
+	        	verificar("OPERADOR_ARITMETICO");
+	        	asignacion.agregarHijo(valor());
 	        }
 	        
 	        verificar("FIN_SENTENCIA");
 	    } else if (currentToken.getTipo().equals("FIN_SENTENCIA")) {
 	        verificar("FIN_SENTENCIA");
 	    }
+	    
+	    return asignacion;
+	}
+	// Regla: operacion -> VALOR | OPERADOR_ARITMETICO
+	private Nodo operacionAritmetica() {
+		
+		Nodo operacion = new Nodo("operacion");
+		operacion.agregarHijo(valor());
+        if (currentToken.getTipo().equals("OPERADOR_ARITMETICO")) {
+        	verificar("OPERADOR_ARITMETICO");
+        	operacion.agregarHijo(valor());	
+        }
+        
+        return operacion;
 	}
 	
 
 	// Regla: VALOR
-	private void valor() {
+	private Nodo valor() {
+		
+		Nodo valor = new Nodo("valor");
 		if (currentToken.getTipo().equals("ENTERO") || currentToken.getTipo().equals("DECIMAL")
 	            || currentToken.getTipo().equals("CADENA") || currentToken.getTipo().equals("NOMBRE_VARIABLE")
 	            || currentToken.getTipo().equals("BOOLEANO")) {
@@ -113,26 +170,32 @@ public class AnalizadorSintactico {
 		} else {
 			verificar("NOMBRE_VARIABLE O TIPO_DATO");
 		}
+		
+		return valor;
 	}
 	
 	// Regla: funcion -> FUNCION NOMBRE_FUNCION '(' ')' bloque
-	private void funcion() {
+	private Nodo funcion() {
+		Nodo funcion = new Nodo("funcion");
 		verificar("FUNCION");
 		verificar("NOMBRE_FUNCION");
 		verificar("PARENTECIS_A");
 		verificar("PARENTECIS_C");
-		bloque();
+		funcion.agregarHijo(bloque());
+		
+		return funcion;
 	}
 
 	// Regla: imprimir -> IMPRIMIR '(' CADENA ')' ';'
-	private void imprimir() {
+	private Nodo imprimir() {
+		Nodo imprimir = new Nodo("imprimir");
 	    verificar("IMPRIMIR");
 	    verificar("PARENTECIS_A");
 	    
 	    if (currentToken.getTipo().equals("ENTERO") || currentToken.getTipo().equals("DECIMAL")
 	            || currentToken.getTipo().equals("CADENA") || currentToken.getTipo().equals("NOMBRE_VARIABLE")
 	            || currentToken.getTipo().equals("BOOLEANO")) {
-	        valor();
+	        imprimir.agregarHijo(valor());
 	        
 		} else {
 			verificar("NOMBRE_VARIABLE O TIPO_DATO");
@@ -140,42 +203,50 @@ public class AnalizadorSintactico {
 	    
 	    verificar("PARENTECIS_C");
 	    verificar("FIN_SENTENCIA");
+	    return imprimir;
 	}
 
 	// Regla: estructura -> CICLO '(' ENTERO ')' bloque
-	private void estructura() {
+	private Nodo ciclo() {
+		Nodo ciclo = new Nodo("ciclo");
 		verificar("CICLO");
 		verificar("PARENTECIS_A");
-		verificar("ENTERO");
+		ciclo.agregarHijo(operacionAritmetica());
 		verificar("PARENTECIS_C");
-		bloque();
+		ciclo.agregarHijo(bloque());
+		return ciclo;
 	}
 
 	// Regla: condicion -> expresion OPERADOR_LOGICO expresion
-	private void condicion() {
-	    valor();
+	private Nodo condicion() {
+		
+		Nodo condicion = new Nodo("condicion");
+	    condicion.agregarHijo(valor());
 	    verificar("OPERADOR_LOGICO");
-	    valor();
+	    condicion.agregarHijo(valor());
 	    
 	    if (currentToken.getTipo().equals("CONDICION_LOGICA")) {
 	        verificar("CONDICION_LOGICA");
-	        condicion();
+	        condicion.agregarHijo(condicion());
 	    }
+	    return condicion;
 	}
 
 	// Regla: bloque -> LLAVE_A sentencia* LLAVE_C
-	private void bloque() {
+	private Nodo bloque() {
+		Nodo bloque = new Nodo("bloque");
 		verificar("LLAVE_A");
 		while (!currentToken.getTipo().equals("LLAVE_C")) {
-			sentencia();
+			bloque.agregarHijo(sentencia());
 		}
 		verificar("LLAVE_C");
+		return bloque;
 	}
 
 	// Método auxiliar para verificar y avanzar al siguiente token
 	private void verificar(String tipo) {
 		if (currentToken.getTipo().equals(tipo)) {
-			System.out.println("token: " + currentToken);
+			//System.out.println("token: " + currentToken);
 			index++;
 			if (index < tokens.size()) {
 				currentToken = tokens.get(index);

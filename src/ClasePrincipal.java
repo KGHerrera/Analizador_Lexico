@@ -24,7 +24,10 @@ public class ClasePrincipal {
 		
 		AnalizadorSintactico analizadorSintactico = new AnalizadorSintactico();
 		
-		analizadorSintactico.analizar(tokens);
+		Nodo arbolSintactico = analizadorSintactico.analizar(tokens);
+		
+		System.out.println("\nArbol sintactico generado:");
+		AnalizadorSintactico.imprimirArbolSintactico(arbolSintactico, 0);
 		
 		
 		
